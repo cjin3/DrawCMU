@@ -1,4 +1,5 @@
 import { Routes, Route, HashRouter } from "react-router-dom";
+import "./Home.css";
 import './App.css';
 import Home from "./Home";
 import Board from "./Board";
