@@ -107,7 +107,7 @@ html, body {
 .hue-bar {
   position: relative;
   width: 35px;
-  height: 200px;
+  height: 250px;
   border-radius: 12px;
   cursor: pointer;
   margin-top: auto;

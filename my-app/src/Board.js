@@ -7,7 +7,6 @@ import CanvasBoard from "./Canvas";
 import { useState } from "react";
 import { useRef } from "react";
 import HueBar from "./HueBar";
-import { Player } from "./player";
 // 👾
 
 const width = 200;
@@ -81,21 +80,22 @@ export default function Board() {
   const location = useLocation();
   const username = location.state?.username || "Anonymous";
   const [board, setBoard] = useState({});
+  const mousePosRef = useRef({ x: 0, y: 0 });
 
   const [curColor, setColor] = useState("#af1b1bff");
 
   const canvasref = useRef(null);
-  const [swatches, setSwatches] = useState([]); // up to 3 custom colors
+  const [swatches, setSwatches] = useState([]);
   const hiddenColorInput = useRef(null);
   const addSwatch = (color) => {
     setSwatches((prev) => {
       let updated = [...prev, color];
-      if (updated.length > 7) {
-        updated = updated.slice(updated.length - 7); // keep only last 3
+      if (updated.length > 5) {
+        updated = updated.slice(updated.length - 5);
       }
       return updated;
     });
-    //curColor = color;
+    curGlobalColor = color;
     setColor(color);
   };
   const handleHueBarClick = (e) => {
@@ -275,17 +275,9 @@ export default function Board() {
                     const colorIdx = curGlobalColor;
                     paintCell(mouseX, mouseY, colorIdx);
                   }
-                  
-                  const interval = setInterval(() => {
-
-                    if (mouseX < 0 || mouseY < 0 || mouseX >= width || mouseY >= length) return;
-
-                    Player(mouseX, mouseY, db, roomCode, username);
-
-
-                  }, 200); // update every 200ms
                 }
               )
+              
 
             }, [])}
 
