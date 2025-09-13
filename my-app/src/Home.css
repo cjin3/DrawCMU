@@ -1,14 +1,12 @@
-/* Container */
 .home-container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #0f172a;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   font-family: "Inter", sans-serif;
 }
 
-/* Card */
 .home-card {
   background: white;
   padding: 2.5rem;
@@ -21,54 +19,36 @@
 
 .home-card h1 {
   margin-bottom: 1rem;
-  color: #111827;
+  color: #333;
 }
 
 .home-card p {
   margin-bottom: 2rem;
-  color: #4b5563;
+  color: #666;
 }
 
-/* Inputs */
 .home-input {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #ccc;
   font-size: 1rem;
   box-sizing: border-box;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-.home-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-}
-
-/* Fancy Button */
 .home-button {
   width: 100%;
-  padding: 0.9rem;
+  padding: 0.75rem;
   border: none;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-size: 1rem;
-  font-weight: 600;
   color: white;
   cursor: pointer;
-  background: linear-gradient(135deg, #2563eb, #9333ea);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.25s ease-in-out;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transition: background 0.3s ease;
 }
 
 .home-button:hover {
-  transform: translateY(-2px) scale(1.02);
-  background: linear-gradient(135deg, #1d4ed8, #7e22ce);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-}
-
-.home-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
 }
