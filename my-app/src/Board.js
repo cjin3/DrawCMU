@@ -7,12 +7,15 @@ import CanvasBoard from "./Canvas";
 import { useState } from "react";
 import { useRef } from "react";
 import HueBar from "./HueBar";
+import { Player } from "./player";
 // 👾
 
 const width = 128;
 const length = 128;
 const pixelSize = 4;
 const boardSize = 512;
+
+
 let paletteColors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"]
 let mouseX = 0;
 let mouseY = 0;
@@ -71,24 +74,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let curColor = "#ff1300";
+let curGlobalColor = "#ff1300";
 
 export default function Board() {
-  const [currentColor, setCurrentColor] = useState("#fff100");
   const { roomCode } = useParams();
   const location = useLocation();
   const username = location.state?.username || "Anonymous";
   const [board, setBoard] = useState({});
-  const canvasref = useRef(null);
 
+  const [curColor, setColor] = useState("#af1b1bff");
+
+  const canvasref = useRef(null);
+  const [swatches, setSwatches] = useState([]); // up to 3 custom colors
+  const hiddenColorInput = useRef(null);
+  const addSwatch = (color) => {
+    setSwatches((prev) => {
+      let updated = [...prev, color];
+      if (updated.length > 3) {
+        updated = updated.slice(updated.length - 3); // keep only last 3
+      }
+      return updated;
+    });
+    //curColor = color;
+    setColor(color);
+  };
+  const handleHueBarClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const percent = y / rect.height;
+    const hue = Math.round(percent * 360);
+    const newColor = `hsl(${hue}, 100%, 50%)`;
+    addSwatch(newColor);
+  };
+
+  const handleHueBarDblClick = () => {
+    if (hiddenColorInput.current) hiddenColorInput.current.click();
+  };
 
   const paintCell = (x, y, color) => {
     if (x < 0 || y < 0 || x >= length || y >= width) return;
     try {
-      console.log("painting " + currentColor)
+      console.log("painting " + color)
 
       let pixelref = ref(db, `rooms/${roomCode}/info/pixels/${x},${y}`);
-      set(pixelref, curColor).then(() => console.log(`changed pixel!`))
+      set(pixelref, color).then(() => console.log(`changed pixel!`))
     } catch (err) {
       console.error(err);
     }
@@ -127,8 +156,8 @@ export default function Board() {
   }, [board]);
 
   useEffect(() => {
-    console.log("Current color is:", currentColor);
-  }, [currentColor]);
+    console.log("Current color is:", curColor);
+  }, [curColor]);
 
   return (
     <div className="board-wrap">
@@ -139,7 +168,7 @@ export default function Board() {
           <span>Grid: <strong id="gridInfo"></strong></span>
         </div>
         <div className="toolbar-right">
-          Left click to paint · Right click to erase · Shift+drag to pan
+          Left click to paint
         </div>
       </div>
 
@@ -152,38 +181,56 @@ export default function Board() {
               key={idx}
               className={`palette-color ${curColor === color ? "active" : ""}`}
               style={{ backgroundColor: color }}
-              onClick={() => { curColor = color; console.log("clicked: " + currentColor)}}
+              onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked: " + curColor)}}
             />
           ))}
 
           {/* Eraser */}
           <div
             className={`palette-color eraser ${curColor === "#ffffff" ? "active" : ""}`}
-            onClick={() => { curColor = "#ffffff"; console.log("clicked eraser" + currentColor) }}
+            onClick={() => { setColor("#ffffff"); curGlobalColor = "#ffffff"; console.log("clicked eraser" + curColor) }}
             title="Eraser"
           >
             🧽
           </div>
 
+        {/* Custom Swatches (max 3) */}
+          <div className="swatches">
+            {swatches.map((color, idx) => (
+              <div
+                key={idx}
+                className={`palette-color ${curColor === color ? "active" : ""}`}
+                style={{ backgroundColor: color }}
+                onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked swatch: " + curColor)}}
+              />
+            ))}
+          </div>
+          
           {/* Add Custom Color */}
           <HueBar
-            onColorSelect={(newColor) => {
-              if (!paletteColors.includes(newColor)) {
-                paletteColors = [...paletteColors, newColor];
-              }
-              setCurrentColor(newColor);
-            }}
+          onColorSelect={(newColor) => addSwatch(newColor)}
+          onDoublePick={handleHueBarDblClick}
           />
+
+          {/* Hidden input for system color picker */}
+          <input
+            type="color"
+            ref={hiddenColorInput}
+            style={{ display: "none" }}
+            onChange={(e) => addSwatch(e.target.value)}
+          />
+   
         </div>
 
         {/* Canvas */}
         <div className="canvas-wrapper">
           <canvas id="board" width="512" height="512">
-            {/* Draw a colored square using canvas API */}
             {useEffect(() => {
               // console.log("board is", board)
               const canvas = document.getElementById("board");
               const pixelSize = canvas.width / board.size;
+
+              setColor(curGlobalColor);
 
               if (!canvas) return;
               const ctx = canvas.getContext("2d");
@@ -197,7 +244,7 @@ export default function Board() {
                 });
               }
 
-            }, [board])}
+            }, [board, curColor])}
 
             {useEffect(() => {
               const canvas = document.getElementById("board");
@@ -208,7 +255,7 @@ export default function Board() {
                   mouseX = Math.floor((e.clientX - rect.left) / pixelSize);
                   mouseY = Math.floor((e.clientY - rect.top) / pixelSize);
                   mouseDrag = true;
-                  const colorIdx = curColor;
+                  const colorIdx = curGlobalColor;
                   paintCell(mouseX, mouseY, colorIdx);
                 }
               )
@@ -221,23 +268,23 @@ export default function Board() {
               canvas.addEventListener('mousemove',
                 (e) => {
                   e.preventDefault();
+                  const rect = canvas.getBoundingClientRect();
+
+                  mouseX = Math.floor((e.clientX - rect.left) / pixelSize);
+                  mouseY = Math.floor((e.clientY - rect.top) / pixelSize);
                   if (mouseDrag) {
-                    const rect = canvas.getBoundingClientRect();
-                    mouseX = Math.floor((e.clientX - rect.left) / pixelSize);
-                    mouseY = Math.floor((e.clientY - rect.top) / pixelSize);
-                    const colorIdx = curColor;
+                    const colorIdx = curGlobalColor;
                     paintCell(mouseX, mouseY, colorIdx);
                   }
+                  
+                  Player(mouseX, mouseY, db, roomCode, username);
                 }
               )
+              
             }, [])}
 
-
-            {useEffect(() => {
-              //const canvas = canvasref.current;
-              // const canvas = document.getElementById("board");
-
-            }, [])}
+            
+            
           </canvas>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Board.css";
 
-export default function HueBar({ onColorSelect }) {
+export default function HueBar({ onColorSelect, onDoublePick }) {
   const [hue, setHue] = useState(0);
 
   const handleClick = (e) => {
@@ -12,11 +12,17 @@ export default function HueBar({ onColorSelect }) {
     setHue(newHue);
 
     const newColor = `hsl(${newHue}, 100%, 50%)`;
-    onColorSelect(newColor);
+    if (onColorSelect) {
+      onColorSelect(newColor);
+    }
   };
 
   return (
-    <div className="hue-bar" onClick={handleClick}>
+    <div
+      className="hue-bar"
+      onClick={handleClick}
+      onDoubleClick={() => onDoublePick && onDoublePick()}
+    >
       <div
         className="hue-knob"
         style={{ top: `${(hue / 360) * 100}%` }}
