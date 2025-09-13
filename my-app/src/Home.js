@@ -4,9 +4,7 @@ import "./Home.css"; // import the stylesheet
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set } from "firebase/database";
-import { getFunctions, httpsCallable } from "firebase/functions";
-
+import { getDatabase, ref, set, get } from "firebase/database";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -26,6 +24,8 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+
 
 const db = getDatabase(app);
 class Home extends React.Component {
@@ -60,13 +60,30 @@ class Home extends React.Component {
       alert("Failed to join room. Please try again.");
     });
     console.log("Joining room:", roomCode, "as", username);
+
+    get(ref(db, `rooms/${roomCode}/array`))
+    .then((snapshot) => {
+      console.log("looking for room array:", roomCode);
+      if (snapshot.exists()) {
+              console.log("Found array for room:", roomCode);
+
+      }
+      else{
+        console.log("no array found, creating room:", roomCode);
+        createRoom(roomCode);
+      }
+    })
+    .catch((error) => {
+      console.error(error)
+    })
+
   };
 
   render() {
     return (
       <div className="home-container">
         <div className="home-card">
-          <h1>🎨 r/place Mini</h1>
+          <h1>🎨 DrawCMU</h1>
           <p>Enter a room code to join a canvas</p>
           <form onSubmit={this.handleSubmit}>
             <input
@@ -93,6 +110,20 @@ class Home extends React.Component {
       </div>
     );
   }
+}
+
+function createRoom(roomCode, size = 64) {
+  const roomRef = ref(db, `rooms/${roomCode}`);
+  
+  const newRoom = {
+    size: size,
+    palette: ["#ffffff","#000000","#ff0000","#00ff00","#0000ff"], // example
+    pixels: {} // empty sparse map
+  };
+
+  return set(roomRef, newRoom)
+    .then(() => console.log(`Room ${roomCode} created!`))
+    .catch(err => console.error("Error creating room:", err));
 }
 
 export default Home;
