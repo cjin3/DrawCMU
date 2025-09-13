@@ -35,7 +35,7 @@ export function addUserToRoom(db, roomCode, username) {
 }
 
 export function createRooms(db, size = 64){
-  const codes = ["retro", "digmedia", "healthsus", "gamify", "hackcmu"]
+  const codes = ["retro", "digimedia", "healthsus", "gamify", "hackcmu"]
   for (let code of codes){
     let roomRef = ref(db, `rooms/${code}/info`);
     let newRoom = {

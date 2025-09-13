@@ -23,6 +23,8 @@ export function populate(db, roomCode) {
     .catch(err => console.error("Error populating room:", err));
 }
 
+  
+
 const firebaseConfig = {
   apiKey: "AIzaSyBiDixs8VRwm5PJyvJic8puhJTMwzb5ESA",
   authDomain: "drawcmu-3daa1.firebaseapp.com",
@@ -37,6 +39,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+
 export default function Board() {
   const paletteColors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"];
   const [currentColor, setCurrentColor] = useState(paletteColors[0] || "#000000");
@@ -44,68 +47,102 @@ export default function Board() {
   const location = useLocation();
   const username = location.state?.username || "Anonymous";
 
+  const [board, setBoard] = useState({});
+
   useEffect(() => {
     console.log("User:", username, "joined room:", roomCode);
-    // 👉 Canvas setup logic will go here later
-  }, [roomCode, username]);
+    const fetchData = async () => {
+      try {
+        console.log("getting database info from ", `rooms/${roomCode}/info`)
+        const ref1 = ref(db, `rooms/${roomCode}/info`);
+        const snap = await get(ref1);
+
+        if (snap.exists()) {
+          const data = snap.val();
+          console.log("data is", data.pixels);
+          setBoard(data.pixels);
+        } else {
+          console.log("No such document!");
+        }
+      } catch (err) {
+        console.error("Error fetching board:", err);
+      }
+    
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    console.log("board updated:", board);
+  }, [board]);
+
 
   return (
-    <div className="board-wrap">
-      {/* Toolbar */}
-      <div className="panel toolbar">
-        <div className="meta">Room: <strong id="roomName">{roomCode}</strong></div>
-        <div className="meta">Grid: <strong id="gridInfo">64x64</strong></div>
-        <div style={{ flex: 1 }}></div>
-        <div className="meta">
-          Left click to paint · Right click to erase · Shift+drag to pan
-        </div>
+  <div className="board-wrap">
+    {/* Toolbar */}
+    <div className="toolbar">
+      <div className="toolbar-left">
+        <span>Room: <strong id="roomName">{roomCode}</strong></span>
+        <span>Grid: <strong id="gridInfo">64×64</strong></span>
       </div>
+      <div className="toolbar-right">
+        Left click to paint · Right click to erase · Shift+drag to pan
+      </div>
+    </div>
 
-      <div className="panel center board-canvas">
-        <div style={{ display: "flex", gap: "10px" }}>
+    {/* Main Board Area */}
+    <div className="board-main">
+      {/* Palette */}
+      <div className="palette">
+        {paletteColors.map((color, idx) => (
+          <div
+            key={idx}
+            className={`palette-color ${currentColor === color ? "active" : ""}`}
+            style={{ backgroundColor: color }}
+            onClick={() => setCurrentColor(color)}
+          />
+        ))}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {paletteColors.map((color, idx) => (
-              <div
-                key={idx}
-                onClick={() => setCurrentColor(color)}
-                style={{
-                  width: "30px",
-                  height: "30px",
-                  backgroundColor: color,
-                  border: currentColor === color ? "3px solid black" : "1px solid #ccc",
-                  cursor: "pointer",
-                }}
-              />
-            ))}
-            <div
+        {/* Eraser */}
+        <div
+          className={`palette-color eraser ${currentColor === "#ffffff" ? "active" : ""}`}
           onClick={() => setCurrentColor("#ffffff")}
           title="Eraser"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "30px",
-            height: "30px",
-            backgroundColor: "#fff",
-            borderRadius: "5px",
-            border: currentColor === "#ffffff" ? "3px solid #333" : "1px solid #ccc",
-            cursor: "pointer",
-            fontSize: "18px",
-            fontWeight: "bold",
-            userSelect: "none",
-          }}
         >
           🧽
         </div>
-
-          </div>
-          <CanvasBoard />
-
-        </div>
       </div>
 
+      {/* Canvas */}
+      <div className="canvas-wrapper">
+        <canvas id="board" width="512" height="512">
+            {/* Draw a colored square using canvas API */}
+            {useEffect(() => {
+              console.log("board is", board)
+              const canvas = document.getElementById("board");
+              const pixelSize = canvas.width / 64;
 
+              if (!canvas) return;
+              const ctx = canvas.getContext("2d");
+              // Draw a square that takes up 1/100 of the board (10x10 grid)
+              // pixel.
+                if (ctx && board) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                Object.entries(board).forEach(([coord, color]) => {
+                  const [x, y] = coord.split(',').map(Number);
+                  ctx.fillStyle = color;
+                  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                });
+                }
+
+
+            })}
+
+
+          </canvas>
+      </div>
     </div>
-  );
+  </div>
+);
 }

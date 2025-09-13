@@ -31,16 +31,14 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 function Home() {
-  
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomCode) return alert("Please enter a room code!");
-
     if (!username) return alert("Please enter a username!");
-    
+
     get(ref(db, `rooms/${roomCode}/`))
       .then((snapshot) => {
         console.log("looking for room array:", roomCode);
@@ -52,7 +50,7 @@ function Home() {
 
         }
         else {
-          console.log("no array found, creating room:", roomCode);
+          console.log("no array found, not a valid room.");
           return alert("Room does not exist! Please try another code.");
         }
       })
@@ -65,7 +63,7 @@ function Home() {
     <div className="home-container">
       <div className="home-card">
         <h1>🎨 DrawCMU</h1>
-        <p>Enter a room code to join a canvas</p>
+        <p style={{ color: 'black'}}>Enter a room code to join a canvas</p>
         <form onSubmit={handleSubmit} className="home-form">
           <input
             className="home-input"
@@ -81,7 +79,9 @@ function Home() {
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value)}
           />
-          <button type="submit">Join Room</button>
+          <button type="submit" className="home-button">
+            Join Room
+          </button>
         </form>
       </div>
     </div>

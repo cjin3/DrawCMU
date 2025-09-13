@@ -31,8 +31,30 @@ html, body {
 
 .toolbar {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   align-items: center;
+  background: #1e293b;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.toolbar-left span {
+  margin-right: 1rem;
+}
+
+.toolbar-right {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.board-main {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  background: #0f172a;
 }
 
 .meta {
@@ -40,6 +62,16 @@ html, body {
   gap: 12px;
   align-items: center;
   color: #bcd7ff;
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1e293b;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .board-canvas {
@@ -50,9 +82,41 @@ html, body {
   justify-content: center;
 }
 
-canvas {
-  background: #fff;
+.palette-color {
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
-  image-rendering: pixelated;
-  display: block;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.palette-color.active {
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.eraser {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Canvas */
+.canvas-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #111827;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+canvas {
+  border-radius: 0.5rem;
+  background: white;
+  cursor: crosshair;
 }
