@@ -4,6 +4,21 @@ import "./Board.css";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get } from "firebase/database";
 
+export function populate(db, roomCode) {
+  let roomRef = ref(db, `rooms/${roomCode}/info/pixels`);
+  let pixels = {};
+  for (let i = 0; i < 64; i++) {
+    for (let j = 0; j < 64; j++) {
+      if (Math.random() < 0.1) { 
+        const color = ["#ffffff","#000000","#ff0000","#00ff00","#0000ff"][Math.floor(Math.random() * 5)];
+        pixels[`${i},${j}`] = color;
+      }
+    }
+  } 
+  set(roomRef, pixels).then(() => console.log(`Room ${roomCode} populated!`))
+  .catch(err => console.error("Error populating room:", err));
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyBiDixs8VRwm5PJyvJic8puhJTMwzb5ESA",
   authDomain: "drawcmu-3daa1.firebaseapp.com",
