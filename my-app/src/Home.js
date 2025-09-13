@@ -9,7 +9,7 @@ import { getDatabase, ref, set, get } from "firebase/database";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { createRoom, createRooms, addUserToRoom} from "./room.js";
-import { Populate } from "./Board.js";
+import { clear, Populate } from "./Board.js";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -34,7 +34,7 @@ function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
- 
+ //clear(db, "retro");
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomCode) return alert("Please enter a room code!");
@@ -63,8 +63,8 @@ function Home() {
   return (
     <div className="home-container">
       <div className="home-card">
-        <h1>🎨 DrawCMU</h1>
-        <p style={{ color: 'black'}}>Enter a room code to join a canvas</p>
+        <h1>🎨 CMUFence</h1>
+        <p style={{ color: 'black'}}>Enter a room code to join painting a fence</p>
         <form onSubmit={handleSubmit} className="home-form">
           <input
             className="home-input"

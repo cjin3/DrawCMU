@@ -5,8 +5,9 @@ import { useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get } from "firebase/database";
 
+const numPixel = 128;
 
-export function createRoom(db, roomCode, size = 64, username) {
+export function createRoom(db, roomCode, size = numPixel, username) {
   
   const roomRef = ref(db, `rooms/${roomCode}/info`);
   
@@ -34,7 +35,7 @@ export function addUserToRoom(db, roomCode, username) {
   });
 }
 
-export function createRooms(db, size = 128){
+export function createRooms(db, size = numPixel){
   const codes = ["retro", "digimedia", "healthsus", "gamify", "hackcmu"]
   for (let code of codes){
     let roomRef = ref(db, `rooms/${code}/info`);

@@ -67,7 +67,7 @@ html, body {
 .palette {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   background: #1e293b;
   padding: 1rem;
   border-radius: 0.75rem;
@@ -95,6 +95,60 @@ html, body {
   box-shadow: 0 0 8px #38bdf8;
 }
 
+.palette-color:hover {
+  transform: scale(1.1);
+  transition: transform 0.15s ease;
+}
+
+.palette-add input[type="color"] {
+  display: none;
+}
+
+.hue-bar {
+  position: relative;
+  width: 35px;
+  height: 200px;
+  border-radius: 12px;
+  cursor: pointer;
+
+  /* rainbow hue gradient */
+  background: linear-gradient(
+    to bottom,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.hue-knob {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #333;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  pointer-events: none; /* clicks go to bar */
+}
+
+.palette-add input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 6px;
+}
+
+.palette-add input[type="color"]::-webkit-color-swatch {
+  border: 2px solid #ccc;
+  border-radius: 6px;
+}
+
 .eraser {
   display: flex;
   align-items: center;
@@ -116,7 +170,6 @@ html, body {
 }
 
 canvas {
-  border-radius: 0.5rem;
   background: white;
   cursor: crosshair;
 }
