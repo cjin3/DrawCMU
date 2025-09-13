@@ -9,7 +9,7 @@ import { getDatabase, ref, set, get } from "firebase/database";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { createRoom, createRooms, addUserToRoom} from "./room.js";
-import { populate } from "./Board.js";
+import { Populate } from "./Board.js";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -34,6 +34,8 @@ function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
+  
+  console.log("populating");
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomCode) return alert("Please enter a room code!");

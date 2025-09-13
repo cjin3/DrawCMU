@@ -6,16 +6,16 @@ import { getDatabase, ref, set, get } from "firebase/database";
 import CanvasBoard from "./Canvas";
 import { useState } from "react";
 
+// 👾
 
-
-export function populate(db, roomCode) {
+export function Populate(db, roomCode) {
   let roomRef = ref(db, `rooms/${roomCode}/info/pixels`);
   let pixels = {};
+  const paletteColors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"];
   for (let i = 0; i < 64; i++) {
     for (let j = 0; j < 64; j++) {
       if (Math.random() < 0.1) {
-        const color = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"][Math.floor(Math.random() * 5)];
-        pixels[`${i},${j}`] = color;
+        pixels[`${i},${j}`] = paletteColors[1];
       }
     }
   }
@@ -55,7 +55,7 @@ export default function Board() {
       try {
         console.log("getting database info from ", `rooms/${roomCode}/info`)
         const ref1 = ref(db, `rooms/${roomCode}/info`);
-        const snap = await get(ref1);
+        const snap = await get(ref1);//change to on value
 
         if (snap.exists()) {
           const data = snap.val();
