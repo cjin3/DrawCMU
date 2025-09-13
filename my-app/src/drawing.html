@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini r/place — Rooms (Local)</title>
+  <style>
+    :root{--bg:#0f1724;--panel:#0b1220;--muted:#93c5fd;--accent:#60a5fa}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:#e6eef8}
+    .app{display:grid;grid-template-columns:320px 1fr;gap:18px;padding:18px;height:100%;box-sizing:border-box}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+    h1{font-size:18px;margin:0 0 12px 0}
+    label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+    input,select,button{margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:transparent;color:inherit;width:100%}
+    .rooms-list{max-height:160px;overflow:auto;margin-top:8px}
+    .room-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:6px;margin-top:6px;background:rgba(255,255,255,0.02)}
+    .room-item button{width:auto;padding:6px 8px}
+    .palette{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .color{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid rgba(0,0,0,0.4)}
+    .controls{display:flex;gap:8px;margin-top:10px}
+    .footer{font-size:12px;color:#9fb4ff;margin-top:10px}
+    .board-wrap{display:flex;flex-direction:column;gap:10px;height:100%}
+    .toolbar{display:flex;gap:8px;align-items:center}
+    .meta{display:flex;gap:12px;align-items:center;color:#bcd7ff}
+    canvas{background:#fff;border-radius:6px;image-rendering:pixelated;display:block}
+    .center{display:flex;align-items:center;justify-content:center}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <h1>Mini r/place — Rooms (local)</h1>
+
+      <label>Current Room</label>
+      <select id="roomSelect"></select>
+
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input id="newRoomInput" placeholder="New room name" />
+        <button id="addRoomBtn">Add</button>
+      </div>
+
+      <label>Rooms</label>
+      <div class="rooms-list" id="roomsList"></div>
+
+      <label>Palette</label>
+      <div class="palette" id="palette"></div>
+
+      <label>Grid Size</label>
+      <div style="display:flex;gap:8px;">
+        <input id="gridSize" type="number" value="64" min="8" max="512" />
+        <button id="resizeBtn">Resize</button>
+      </div>
+
+      <label>Tools</label>
+      <div class="controls">
+        <button id="panBtn">Pan</button>
+        <button id="eraseBtn">Eraser</button>
+        <button id="clearBtn">Clear Room</button>
+      </div>
+
+      <label>Save / Share</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button id="exportBtn">Export Room (JSON)</button>
+        <button id="importBtn">Import JSON</button>
+      </div>
+
+      <div class="footer">Notes: This demo stores data in your browser (localStorage). For real-time multi-user rooms you'd need a backend (WebSocket or Firebase Realtime DB / Firestore).</div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="panel" style="flex:0 0 auto">
+        <div class="toolbar">
+          <div class="meta">Room: <strong id="roomName"></strong></div>
+          <div class="meta">Grid: <strong id="gridInfo"></strong></div>
+          <div style="flex:1"></div>
+          <div class="meta">Left click to paint · Right click to erase · Shift+drag to pan</div>
+        </div>
+      </div>
+
+      <div class="panel center" style="flex:1 1 auto;overflow:auto;">
+        <canvas id="board" width="512" height="512"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="importFile" accept="application/json" style="display:none" />
+
+  <script>
+  // --- Simple r/place-like pixelboard with local rooms ---
+  // Data model: localStorage key: "rplace_rooms" -> { roomName: { size: N, pixels: Uint8Array as base64, palette: [...colors] } }
+
+  const defaultPalette = [
+    '#ffffff','#e4e4e4','#888888','#222222','#ff0000','#ff7f00','#ffff00','#7fff00',
+    '#00ff00','#00ffff','#007fff','#0000ff','#7f00ff','#ff00ff','#ff007f','#7f0000'
+  ];
+
+  // DOM
+  const roomSelect = document.getElementById('roomSelect');
+  const roomsList = document.getElementById('roomsList');
+  const newRoomInput = document.getElementById('newRoomInput');
+  const addRoomBtn = document.getElementById('addRoomBtn');
+  const paletteWrap = document.getElementById('palette');
+  const gridSizeInput = document.getElementById('gridSize');
+  const resizeBtn = document.getElementById('resizeBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+  const panBtn = document.getElementById('panBtn');
+  const eraseBtn = document.getElementById('eraseBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const board = document.getElementById('board');
+  const ctx = board.getContext('2d');
+  const roomNameLabel = document.getElementById('roomName');
+  const gridInfo = document.getElementById('gridInfo');
+
+  // State
+  let rooms = {}; // loaded from storage
+  let currentRoom = null;
+  let gridSize = 64;
+  let palette = defaultPalette.slice();
+  let currentColorIdx = 4;
+  let pixelSize = 8; // pixels per cell (canvas scale)
+  let isPanning = false;
+  let isErasing = false;
+  let offsetX = 0, offsetY = 0; // pan offsets
+  let isMouseDown = false;
+  let lastPaintPos = null;
+
+  // Helpers: storage
+  function loadRooms(){
+    const raw = localStorage.getItem('rplace_rooms');
+    if(raw){
+      try{ rooms = JSON.parse(raw); } catch(e){ rooms = {}; }
+    } else {
+      rooms = {};
+    }
+  }
+  function saveRooms(){ localStorage.setItem('rplace_rooms', JSON.stringify(rooms)); }
+
+  // Create default room if none
+  function ensureDefault(){
+    if(Object.keys(rooms).length === 0){
+      rooms['lobby'] = makeEmptyRoom(gridSize);
+      saveRooms();
+    }
+  }
+
+  function makeEmptyRoom(size){
+    return { size: size, pixels: Array(size*size).fill(0), palette: defaultPalette.slice() };
+  }
+
+  // UI: populate palette
+  function renderPalette(){
+    paletteWrap.innerHTML = '';
+    palette.forEach((c,i)=>{
+      const d = document.createElement('div');
+      d.className = 'color';
+      d.style.background = c;
+      d.title = c;
+      d.addEventListener('click',()=>{ currentColorIdx = i; isErasing=false; updateUI(); });
+      if(i === currentColorIdx) d.style.outline = '3px solid rgba(255,255,255,0.12)';
+      paletteWrap.appendChild(d);
+    });
+  }
+
+  // Rooms UI
+  function renderRooms(){
+    roomSelect.innerHTML = '';
+    roomsList.innerHTML = '';
+    Object.keys(rooms).forEach(name=>{
+      const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+      roomSelect.appendChild(opt);
+
+      const item = document.createElement('div'); item.className='room-item';
+      const left = document.createElement('div'); left.textContent = name;
+      const actions = document.createElement('div');
+      const del = document.createElement('button'); del.textContent='Delete';
+      del.addEventListener('click',()=>{ if(confirm('Delete room "'+name+'"?')){ delete rooms[name]; saveRooms(); if(currentRoom===name) currentRoom = Object.keys(rooms)[0] || null; renderAll(); }});
+      const dup = document.createElement('button'); dup.textContent='Duplicate';
+      dup.addEventListener('click',()=>{ const newName = prompt('New name for duplicate:', name+'-copy'); if(newName){ rooms[newName]=JSON.parse(JSON.stringify(rooms[name])); saveRooms(); renderAll(); }});
+      actions.appendChild(dup); actions.appendChild(del);
+      item.appendChild(left); item.appendChild(actions);
+      roomsList.appendChild(item);
+    });
+    if(!currentRoom) currentRoom = Object.keys(rooms)[0];
+    roomSelect.value = currentRoom;
+  }
+
+  // Board render
+  function resizeCanvasToGrid(){
+    const room = rooms[currentRoom];
+    gridSize = room.size;
+    const maxCanvas = 1024; // limit visual size
+    pixelSize = Math.max(1, Math.floor(Math.min(maxCanvas / gridSize, 12)));
+    board.width = gridSize * pixelSize;
+    board.height = gridSize * pixelSize;
+  }
+
+  function drawBoard(){
+    const room = rooms[currentRoom];
+    if(!room) return;
+    resizeCanvasToGrid();
+    gridInfo.textContent = gridSize + ' x ' + gridSize;
+    roomNameLabel.textContent = currentRoom;
+    // draw pixels
+    for(let y=0;y<gridSize;y++){
+      for(let x=0;x<gridSize;x++){
+        const idx = y*gridSize + x;
+        const colorIdx = room.pixels[idx];
+        ctx.fillStyle = room.palette[colorIdx] || '#ffffff';
+        ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, pixelSize);
+      }
+    }
+    // grid lines (subtle)
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 1;
+    if(pixelSize >= 4){
+      for(let i=0;i<=gridSize;i++){
+        ctx.beginPath(); ctx.moveTo(i*pixelSize,0); ctx.lineTo(i*pixelSize,gridSize*pixelSize); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*pixelSize); ctx.lineTo(gridSize*pixelSize,i*pixelSize); ctx.stroke();
+      }
+    }
+  }
+
+  function updateUI(){ renderPalette(); drawBoard(); }
+
+  // Painting logic
+  function getCursorCell(evt){
+    const rect = board.getBoundingClientRect();
+    const x = Math.floor((evt.clientX - rect.left) / pixelSize);
+    const y = Math.floor((evt.clientY - rect.top) / pixelSize);
+    return {x,y};
+  }
+
+  function paintCell(x,y, colorIdx){
+    if(x<0||y<0||x>=gridSize||y>=gridSize) return;
+    const room = rooms[currentRoom];
+    const idx = y*gridSize + x;
+    if(room.pixels[idx] === colorIdx) return;
+    room.pixels[idx] = colorIdx;
+    // draw
+    ctx.fillStyle = room.palette[colorIdx] || '#ffffff';
+    ctx.fillRect(x*pixelSize, y*pixelSize, pixelSize, pixelSize);
+    saveRooms();
+  }
+
+  board.addEventListener('mousedown', (e)=>{
+    e.preventDefault();
+    isMouseDown = true;
+    if(e.button === 1) { isPanning = true; return; }
+    if(e.button === 2) { isErasing = true; }
+    const pos = getCursorCell(e);
+    const colorIdx = isErasing ? 0 : currentColorIdx;
+    paintCell(pos.x,pos.y,colorIdx);
+    lastPaintPos = pos;
+  });
+
+  board.addEventListener('mousemove', (e)=>{
+    if(!isMouseDown) return;
+    if(isPanning) return; // simple demo doesn't implement pan offset
+    const pos = getCursorCell(e);
+    if(!lastPaintPos || pos.x !== lastPaintPos.x || pos.y !== lastPaintPos.y){
+      const colorIdx = isErasing ? 0 : currentColorIdx;
+      paintCell(pos.x,pos.y,colorIdx);
+      lastPaintPos = pos;
+    }
+  });
+
+  window.addEventListener('mouseup', ()=>{ isMouseDown=false; isPanning=false; isErasing=false; lastPaintPos=null; });
+  board.addEventListener('contextmenu', (e)=>{ e.preventDefault(); });
+
+  // Controls
+  addRoomBtn.addEventListener('click', ()=>{
+    const name = (newRoomInput.value||'').trim();
+    if(!name) return alert('Pick a name');
+    if(rooms[name]) return alert('Room exists');
+    const size = Math.max(8, Math.min(256, parseInt(gridSizeInput.value)||64));
+    rooms[name] = makeEmptyRoom(size);
+    saveRooms();
+    currentRoom = name;
+    newRoomInput.value = '';
+    renderAll();
+  });
+
+  roomSelect.addEventListener('change', ()=>{ currentRoom = roomSelect.value; renderAll(); });
+
+  resizeBtn.addEventListener('click', ()=>{
+    const size = Math.max(8, Math.min(256, parseInt(gridSizeInput.value)||64));
+    if(!currentRoom) return;
+    if(!confirm('Resize will clear the room. Continue?')) return;
+    rooms[currentRoom] = makeEmptyRoom(size);
+    saveRooms(); renderAll();
+  });
+
+  clearBtn.addEventListener('click', ()=>{ if(confirm('Clear room?')){ rooms[currentRoom]=makeEmptyRoom(rooms[currentRoom].size); saveRooms(); renderAll(); }});
+
+  eraseBtn.addEventListener('click', ()=>{ isErasing = !isErasing; eraseBtn.textContent = isErasing ? 'Eraser ✅' : 'Eraser'; });
+  panBtn.addEventListener('click', ()=>{ isPanning = !isPanning; panBtn.textContent = isPanning ? 'Pan ✅' : 'Pan'; });
+
+  exportBtn.addEventListener('click', ()=>{
+    const data = rooms[currentRoom];
+    const blob = new Blob([JSON.stringify({ name: currentRoom, room: data })], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download = currentRoom + '.rplace.json'; a.click(); URL.revokeObjectURL(url);
+  });
+
+  importBtn.addEventListener('click', ()=>{ importFile.click(); });
+  importFile.addEventListener('change', async(e)=>{
+    const f = e.target.files[0]; if(!f) return;
+    const txt = await f.text();
+    try{
+      const obj = JSON.parse(txt);
+      if(obj.name && obj.room){ rooms[obj.name]=obj.room; currentRoom = obj.name; saveRooms(); renderAll(); }
+      else alert('Invalid file');
+    }catch(err){ alert('Invalid JSON'); }
+    importFile.value='';
+  });
+
+  // Initial setup
+  function renderAll(){ renderRooms(); renderPalette(); drawBoard(); }
+
+  loadRooms(); ensureDefault(); currentRoom = currentRoom || Object.keys(rooms)[0]; renderAll();
+
+  // keyboard shortcuts
+  window.addEventListener('keydown', (e)=>{
+    if(e.key==='c' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); navigator.clipboard.writeText(JSON.stringify(rooms[currentRoom])); alert('Room JSON copied to clipboard'); }
+  });
+
+  </script>
+</body>
+</html>
