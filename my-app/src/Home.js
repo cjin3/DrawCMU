@@ -10,6 +10,7 @@ import { getDatabase, ref, set, get } from "firebase/database";
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { createRoom, createRooms, addUserToRoom} from "./room.js";
 import { clear, Populate } from "./Board.js";
+import {Player} from "./player.js";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {

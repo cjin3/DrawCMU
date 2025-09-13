@@ -98,6 +98,59 @@ export default function Board() {
     curGlobalColor = color;
     setColor(color);
   };
+
+  // --- Add these new state and functions at the top of your Board component ---
+  const [users, setUsers] = useState({});
+
+  // Update this user's cursor position in Firebase (throttled to every 200ms)
+  useEffect(() => {
+    let interval = setInterval(() => {
+      if (mouseX < 0 || mouseY < 0 || mouseX >= width || mouseY >= length) return;
+      const userRef = ref(db, `rooms/${roomCode}/users/${username}/coords`);
+      set(userRef, { x: mouseX, y: mouseY }).catch(console.error);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [roomCode, username]);
+
+  // Listen for all users' positions
+  useEffect(() => {
+    const usersRef = ref(db, `rooms/${roomCode}/users`);
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUsers(snapshot.val());
+      }
+    });
+    return () => unsubscribe();
+  }, [roomCode]);
+
+  // --- Modify your existing canvas drawing useEffect (or create a new one) to include usernames ---
+  useEffect(() => {
+    const canvas = document.getElementById("board");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Draw existing pixels
+    if (board.pixels) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      Object.entries(board.pixels).forEach(([coord, color]) => {
+        const [x, y] = coord.split(',').map(Number);
+        ctx.fillStyle = color;
+        ctx.fillRect(x * pixelLength, y * pixelLength, pixelLength, pixelLength);
+      });
+    }
+
+    // Draw usernames above each cursor
+    Object.entries(users).forEach(([user, info]) => {
+      if (info.coords) {
+        const { x, y } = info.coords;
+        ctx.fillStyle = "black";
+        ctx.font = "12px Arial";
+        ctx.fillText(user, x * pixelLength, y * pixelLength - 2);
+      }
+    });
+  }, [board, users]);
+
   const handleHueBarClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
@@ -277,7 +330,7 @@ export default function Board() {
                   }
                 }
               )
-              
+
 
             }, [])}
 
