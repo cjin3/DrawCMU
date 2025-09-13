@@ -29,6 +29,19 @@ export default function Board() {
     // 👉 Canvas setup logic will go here later
   }, [roomCode, username]);
 
+  // Create a map from coordinate tuple "x,y" to a random number between 0 and 12 inclusive
+  const [board, setBoard] = useState(() => {
+    const map = new Map();
+    for (let x = 0; x < 64; x++) {
+      for (let y = 0; y < 64; y++) {
+        map.set(`${x},${y}`, Math.floor(Math.random() * 13));
+      }
+    }
+    return map;
+  });
+
+  const boardEdgeSize = board.size**.5
+
   return (
     <div className="board-wrap">
       {/* Toolbar */}
@@ -56,7 +69,27 @@ export default function Board() {
         </div>
         {/* Canvas */}
         <div className="panel center">
-          <canvas id="board" width="512" height="512"></canvas>
+          <canvas id="board" width="512" height="512">
+            {/* Draw a colored square using canvas API */}
+            {useEffect(() => {
+              const canvas = document.getElementById("board");
+              const pixelSize = canvas.width / boardEdgeSize;
+
+              if (!canvas) return;
+              const ctx = canvas.getContext("2d");
+              // ctx.clearRect(0, 0, canvas.width, canvas.height);
+              // Draw a square that takes up 1/100 of the board (10x10 grid)
+              board.forEach((colorIdx, key) => {
+                const [x, y] = key.split(',').map(Number);
+                ctx.fillStyle = COLOR_PALETTE[colorIdx];
+                ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+              });
+
+
+            })}
+
+
+          </canvas>
         </div>
       </div>
     </div>
