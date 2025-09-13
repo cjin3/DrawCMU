@@ -29,14 +29,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 const db = getDatabase(app);
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      roomCode: "",
-      username: "",
-    };
-  }
 
 function Home () {
   const [roomCode, setRoomCode] = useState("");
