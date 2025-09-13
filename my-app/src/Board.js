@@ -10,10 +10,10 @@ import HueBar from "./HueBar";
 import { Player } from "./player";
 // 👾
 
-const width = 128;
-const length = 128;
-const pixelSize = 4;
-const boardSize = 512;
+const width = 200;
+const length = 200;
+const pixelLength = 4;
+const boardSize = width * pixelLength;
 
 
 let paletteColors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"]
@@ -90,8 +90,8 @@ export default function Board() {
   const addSwatch = (color) => {
     setSwatches((prev) => {
       let updated = [...prev, color];
-      if (updated.length > 3) {
-        updated = updated.slice(updated.length - 3); // keep only last 3
+      if (updated.length > 7) {
+        updated = updated.slice(updated.length - 7); // keep only last 3
       }
       return updated;
     });
@@ -165,7 +165,7 @@ export default function Board() {
       <div className="toolbar">
         <div className="toolbar-left">
           <span>Room: <strong id="roomName">{roomCode}</strong></span>
-          <span>Grid: <strong id="gridInfo"></strong></span>
+          <span>Grid: <strong id="gridInfo">{width}, {length}</strong></span>
         </div>
         <div className="toolbar-right">
           Left click to paint
@@ -181,7 +181,7 @@ export default function Board() {
               key={idx}
               className={`palette-color ${curColor === color ? "active" : ""}`}
               style={{ backgroundColor: color }}
-              onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked: " + curColor)}}
+              onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked: " + curColor) }}
             />
           ))}
 
@@ -194,22 +194,22 @@ export default function Board() {
             🧽
           </div>
 
-        {/* Custom Swatches (max 3) */}
+          {/* Custom Swatches (max 3) */}
           <div className="swatches">
             {swatches.map((color, idx) => (
               <div
                 key={idx}
                 className={`palette-color ${curColor === color ? "active" : ""}`}
                 style={{ backgroundColor: color }}
-                onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked swatch: " + curColor)}}
+                onClick={() => { setColor(color); curGlobalColor = color; console.log("clicked swatch: " + curColor) }}
               />
             ))}
           </div>
-          
+
           {/* Add Custom Color */}
           <HueBar
-          onColorSelect={(newColor) => addSwatch(newColor)}
-          onDoublePick={handleHueBarDblClick}
+            onColorSelect={(newColor) => addSwatch(newColor)}
+            onDoublePick={handleHueBarDblClick}
           />
 
           {/* Hidden input for system color picker */}
@@ -219,16 +219,15 @@ export default function Board() {
             style={{ display: "none" }}
             onChange={(e) => addSwatch(e.target.value)}
           />
-   
+
         </div>
 
         {/* Canvas */}
         <div className="canvas-wrapper">
-          <canvas id="board" width="512" height="512">
+          <canvas id="board" width={boardSize} height={boardSize}>
             {useEffect(() => {
               // console.log("board is", board)
               const canvas = document.getElementById("board");
-              const pixelSize = canvas.width / board.size;
 
               setColor(curGlobalColor);
 
@@ -240,7 +239,7 @@ export default function Board() {
                 Object.entries(board.pixels).forEach(([coord, color]) => {
                   const [x, y] = coord.split(',').map(Number);
                   ctx.fillStyle = color;
-                  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                  ctx.fillRect(x * pixelLength, y * pixelLength, pixelLength, pixelLength);
                 });
               }
 
@@ -252,8 +251,8 @@ export default function Board() {
                 (e) => {
                   e.preventDefault();
                   const rect = canvas.getBoundingClientRect();
-                  mouseX = Math.floor((e.clientX - rect.left) / pixelSize);
-                  mouseY = Math.floor((e.clientY - rect.top) / pixelSize);
+                  mouseX = Math.floor((e.clientX - rect.left) / pixelLength);
+                  mouseY = Math.floor((e.clientY - rect.top) / pixelLength);
                   mouseDrag = true;
                   const colorIdx = curGlobalColor;
                   paintCell(mouseX, mouseY, colorIdx);
@@ -270,21 +269,28 @@ export default function Board() {
                   e.preventDefault();
                   const rect = canvas.getBoundingClientRect();
 
-                  mouseX = Math.floor((e.clientX - rect.left) / pixelSize);
-                  mouseY = Math.floor((e.clientY - rect.top) / pixelSize);
+                  mouseX = Math.floor((e.clientX - rect.left) / pixelLength);
+                  mouseY = Math.floor((e.clientY - rect.top) / pixelLength);
                   if (mouseDrag) {
                     const colorIdx = curGlobalColor;
                     paintCell(mouseX, mouseY, colorIdx);
                   }
                   
-                  Player(mouseX, mouseY, db, roomCode, username);
+                  const interval = setInterval(() => {
+
+                    if (mouseX < 0 || mouseY < 0 || mouseX >= width || mouseY >= length) return;
+
+                    Player(mouseX, mouseY, db, roomCode, username);
+
+
+                  }, 200); // update every 200ms
                 }
               )
-              
+
             }, [])}
 
-            
-            
+
+
           </canvas>
         </div>
       </div>
