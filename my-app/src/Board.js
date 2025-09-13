@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import "./Board.css";
 
@@ -22,6 +22,8 @@ export default function Board() {
   const location = useLocation();
   const username = location.state?.username || "Anonymous";
 
+  const [colorIndex, setColorIndex] = useState(0);
+
   useEffect(() => {
     console.log("User:", username, "joined room:", roomCode);
     // 👉 Canvas setup logic will go here later
@@ -44,8 +46,12 @@ export default function Board() {
       <div className="board-canvas">
         {/* Palette */}
         <div className="panel palette">
-          {COLOR_PALETTE.map((color) => {
-            return <div className="color" key={color} style={{ background: color }}></div>;
+          {COLOR_PALETTE.entries().map(([index, color]) => {
+            return <div className={`color ${index === colorIndex ? 'selected' : ''}`}
+                        key={color} 
+                        style={{ background: color } }
+                        onClick={() => {setColorIndex(index)}}>
+                    </div>;
           })}
         </div>
         {/* Canvas */}
