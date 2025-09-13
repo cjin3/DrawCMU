@@ -31,6 +31,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 function Home() {
+  
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ function Home() {
 
     if (!username) return alert("Please enter a username!");
     
-    get(ref(db, `rooms/${roomCode}/info/`))
+    get(ref(db, `rooms/${roomCode}/`))
       .then((snapshot) => {
         console.log("looking for room array:", roomCode);
         if (snapshot.exists()) {
