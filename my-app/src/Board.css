@@ -46,8 +46,28 @@ html, body {
   flex: 1 1 auto;
   overflow: auto;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin-right: 25vw;
+}
+
+.board-canvas > :first-child {
+  margin-right: auto;
+}
+
+.palette {
+  height: 95%;
+  width:20vw;
+}
+
+.color {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  margin-bottom: 8px;
 }
 
 canvas {

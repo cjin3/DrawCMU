@@ -78,7 +78,7 @@ function Home () {
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
         />
-        <button type="submit">Join Room</button>
+        <button className="home-button" type="submit">Join Room</button>
       </form>
         </div>
       </div>
