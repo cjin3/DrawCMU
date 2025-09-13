@@ -1,6 +1,7 @@
 import React from "react";
 import "./Home.css"; // import the stylesheet
-
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -28,23 +29,16 @@ const app = initializeApp(firebaseConfig);
 
 
 const db = getDatabase(app);
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      roomCode: "",
-      username: "",
-    };
-  }
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
+function Home () {
+  const [roomCode, setRoomCode] = useState("");
+  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
 
-  handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const { roomCode, username } = this.state;
     if (!roomCode) return alert("Please enter a room code!");
+
     if (!username) return alert("Please enter a username!");
 
     set(ref(db, `rooms/${roomCode}/users/${username}`), {
@@ -59,71 +53,37 @@ class Home extends React.Component {
       console.error("Error joining room:", error);
       alert("Failed to join room. Please try again.");
     });
+    
     console.log("Joining room:", roomCode, "as", username);
-
-    get(ref(db, `rooms/${roomCode}/array`))
-    .then((snapshot) => {
-      console.log("looking for room array:", roomCode);
-      if (snapshot.exists()) {
-              console.log("Found array for room:", roomCode);
-
-      }
-      else{
-        console.log("no array found, creating room:", roomCode);
-        createRoom(roomCode);
-      }
-    })
-    .catch((error) => {
-      console.error(error)
-    })
-
+    navigate(`/draw/${roomCode}`);
   };
 
-  render() {
     return (
       <div className="home-container">
         <div className="home-card">
           <h1>🎨 DrawCMU</h1>
           <p>Enter a room code to join a canvas</p>
-          <form onSubmit={this.handleSubmit}>
-            <input
-              type="text"
-              name="username"
-              placeholder="Enter your username"
-              value={this.state.username}
-              onChange={this.handleChange}
-              className="home-input"
-            />
-            <input
-              type="text"
-              name="roomCode"
-              placeholder="Enter room code"
-              value={this.state.roomCode}
-              onChange={this.handleChange}
-              className="home-input"
-            />
-            <button type="submit" className="home-button">
-              Join Room
-            </button>
-          </form>
+      <form onSubmit={handleSubmit} className="home-form">
+        <input
+          className="home-input"
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          className="home-input"
+          type="text"
+          placeholder="Room Code"
+          value={roomCode}
+          onChange={(e) => setRoomCode(e.target.value)}
+        />
+        <button type="submit">Join Room</button>
+      </form>
         </div>
       </div>
     );
   }
-}
-
-function createRoom(roomCode, size = 64) {
-  const roomRef = ref(db, `rooms/${roomCode}`);
-  
-  const newRoom = {
-    size: size,
-    palette: ["#ffffff","#000000","#ff0000","#00ff00","#0000ff"], // example
-    pixels: {} // empty sparse map
-  };
-
-  return set(roomRef, newRoom)
-    .then(() => console.log(`Room ${roomCode} created!`))
-    .catch(err => console.error("Error creating room:", err));
 }
 
 export default Home;

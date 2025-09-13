@@ -1,0 +1,99 @@
+/* Container for the whole board */
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #121212; /* dark background */
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* Top controls (room name, size, buttons) */
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.board-controls button {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.board-controls button:hover {
+  background: #333;
+}
+
+/* Palette colors */
+#palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 15px 0;
+  justify-content: center;
+}
+
+#palette .color {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s ease;
+}
+
+#palette .color:hover {
+  transform: scale(1.1);
+  border: 2px solid #fff;
+}
+
+/* Canvas (drawing board) */
+#board {
+  border: 2px solid #444;
+  border-radius: 8px;
+  background: #fff;
+  cursor: crosshair;
+  margin: 10px 0;
+}
+
+/* Room list styles */
+#roomsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e1e1e;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.room-item button {
+  margin-left: 5px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+/* Info labels */
+#roomName {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+#gridInfo {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
