@@ -25,17 +25,25 @@ export default function Board() {
 
   useEffect(() => {
     console.log("User:", username, "joined room:", roomCode);
-
-    // 👉 Place your pixel board setup code here
-    // Example: initCanvas();
-
+    // 👉 Canvas setup logic will go here later
   }, [roomCode, username]);
 
   return (
-    <div className="board-page">
-      <h2>Room: {roomCode}</h2>
-      <p>User: {username}</p>
-      <canvas id="board" width="512" height="512"></canvas>
+    <div className="board-wrap">
+      {/* Toolbar */}
+      <div className="panel toolbar">
+        <div className="meta">Room: <strong id="roomName">{roomCode}</strong></div>
+        <div className="meta">Grid: <strong id="gridInfo">64x64</strong></div>
+        <div style={{ flex: 1 }}></div>
+        <div className="meta">
+          Left click to paint · Right click to erase · Shift+drag to pan
+        </div>
+      </div>
+
+      {/* Canvas */}
+      <div className="panel center board-canvas">
+        <canvas id="board" width="512" height="512"></canvas>
+      </div>
     </div>
   );
 }
