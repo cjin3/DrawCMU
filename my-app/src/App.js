@@ -9,6 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/draw/:roomCode" element={<Board />} />
+        
       </Routes>
     </HashRouter>
   );
