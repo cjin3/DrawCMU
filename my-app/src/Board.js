@@ -10,10 +10,11 @@ import { useState } from "react";
 
 export function Populate(db, roomCode) {
   let roomRef = ref(db, `rooms/${roomCode}/info/pixels`);
+  let size = ref(db, `rooms/${roomCode}/info/size`);
   let pixels = {};
   const paletteColors = ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"];
-  for (let i = 0; i < 64; i++) {
-    for (let j = 0; j < 64; j++) {
+  for (let i = 0; i < 128; i++) {
+    for (let j = 0; j < 128; j++) {
       if (Math.random() < 0.1) {
         pixels[`${i},${j}`] = paletteColors[1];
       }
@@ -121,7 +122,7 @@ export default function Board() {
             {useEffect(() => {
               console.log("board is", board)
               const canvas = document.getElementById("board");
-              const pixelSize = canvas.width / 64;
+              const pixelSize = canvas.width / 128;
 
               if (!canvas) return;
               const ctx = canvas.getContext("2d");

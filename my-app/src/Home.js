@@ -34,8 +34,7 @@ function Home() {
   const [roomCode, setRoomCode] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
-  
-  console.log("populating");
+ 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomCode) return alert("Please enter a room code!");
