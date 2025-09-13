@@ -25,10 +25,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-
-
 const db = getDatabase(app);
+
+const rooms = ["digmedia", "gamify", "hackcmu", "healthsus", "retro"];
 
 function Home() {
   const [roomCode, setRoomCode] = useState("");
@@ -37,21 +36,17 @@ function Home() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!roomCode) return alert("Please enter a room code!");
-
     if (!username) return alert("Please enter a username!");
     
     get(ref(db, `rooms/${roomCode}/info/`))
       .then((snapshot) => {
         console.log("looking for room array:", roomCode);
-        if (snapshot.exists()) {
+        if (snapshot.exists() && rooms.includes(roomCode.toLocaleLowerCase())) {
           console.log("Found array for room:", roomCode);
           addUserToRoom(db, roomCode, username);
           navigate(`/draw/${roomCode}`, { state: { username } });
-
-
         }
         else {
-          console.log("no array found, creating room:", roomCode);
           return alert("Room does not exist! Please try another code.");
         }
       })
